@@ -89,25 +89,13 @@ void handle_client_request(int fd_client) {
  */
 void handle_server_response(int fd_server, int fd_client) {
     rio_t rio;
-    char buf[MAXLINE];
+    char buf[MAXBUF];
 
     Rio_readinitb(&rio, fd_server);
-    if (!Rio_readlineb(&rio, buf, MAXLINE)) {
-        return;
-    }
-    printf("%s", buf);
-    Rio_writen(fd_client, buf, strlen(buf));
-    while (strcmp(buf, "\r\n")) {
-        Rio_readlineb(&rio, buf, MAXLINE);
+
+    while (Rio_readnb(&rio, buf, MAXBUF)) {
         printf("%s", buf);
         Rio_writen(fd_client, buf, strlen(buf));
-    }
-
-    char content_buf[MAXBUF];
-
-    while (rio_readn(&rio, content_buf, MAXBUF)) {
-        printf("%s", content_buf);
-        rio_writen(fd_client, content_buf, strlen(content_buf));
     }
 
     Close(fd_server);
