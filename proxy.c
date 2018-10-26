@@ -105,9 +105,9 @@ void handle_server_response(int fd_server, int fd_client) {
 
     char content_buf[MAXBUF];
 
-    while (Rio_readnb(&rio, content_buf, MAXBUF)) {
+    while (rio_readn(&rio, content_buf, MAXBUF)) {
         printf("%s", content_buf);
-        Rio_writen(fd_client, content_buf, strlen(content_buf));
+        rio_writen(fd_client, content_buf, strlen(content_buf));
     }
 
     Close(fd_server);
