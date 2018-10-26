@@ -12,7 +12,7 @@ static const char *host_name = "Host: ";
 static const char *connection_name = "Connection: ";
 static const char *proxy_connection_name = "Proxy-Connection: ";
 
-void handle_client_request(int connfd);
+void *handle_client_request(void *arg);
 void handle_server_response(int fd_server, int fd_client);
 void parse_uri(char *uri, char *host, char *port, char *query);
 void construct_request(char *request, const char *method, const char *query,
@@ -40,15 +40,17 @@ int main(int argc, char **argv) {
         Getnameinfo((SA *) &clientaddr, clientlen, hostname,
                 MAXLINE, port, MAXLINE, 0);
         printf("Accepted connection from (%s, %s)\n", hostname, port);
-        handle_client_request(fd_client);
-        Close(fd_client);
+        pthread_t tid;
+        Pthread_create(&tid, NULL, handle_client_request, (void *)&fd_client);
+        Pthread_detach(tid);
     }
 }
 
 /*
  * handle_client_request - handles http request from client
  */
-void handle_client_request(int fd_client) {
+void *handle_client_request(void *arg) {
+    int fd_client = *((int *)arg);
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE];
     char host[MAXLINE], port[MAXLINE], query[MAXLINE];
     char request[MAXBUF];
@@ -57,7 +59,7 @@ void handle_client_request(int fd_client) {
 
     Rio_readinitb(&rio, fd_client);
     if (!Rio_readlineb(&rio, buf, MAXLINE)) {
-        return;
+        return NULL;
     }
     printf("Received HTTP request %s", buf);
     sscanf(buf, "%s %s", method, uri);
@@ -65,7 +67,7 @@ void handle_client_request(int fd_client) {
         /* Not a GET request */
         client_error(fd_client, method, "501", "Not Implemented",
                      "Web Proxy does not implement this method");
-        return;
+        return NULL;
     }
 
     parse_uri(uri, host, port, query);
@@ -80,6 +82,10 @@ void handle_client_request(int fd_client) {
     handle_server_response(fd_server, fd_client);
 
     printf("Success");
+
+    Close(fd_client);
+
+    return NULL;
 }
 
 /*
