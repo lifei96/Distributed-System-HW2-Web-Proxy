@@ -93,7 +93,7 @@ void handle_server_response(int fd_server, int fd_client) {
 
     Rio_readinitb(&rio, fd_server);
 
-    while (size = Rio_readnb(&rio, buf, MAXBUF)) {
+    while ((size = Rio_readnb(&rio, buf, MAXBUF))) {
         printf("%s", buf);
         Rio_writen(fd_client, buf, size);
     }
