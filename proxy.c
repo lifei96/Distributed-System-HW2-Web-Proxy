@@ -7,7 +7,6 @@
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 
-static const char *content_length_name = "Content-length: ";
 static const char *user_agent_name = "User-Agent: ";
 static const char *host_name = "Host: ";
 static const char *connection_name = "Connection: ";
