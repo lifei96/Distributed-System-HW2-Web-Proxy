@@ -90,7 +90,6 @@ void handle_client_request(int fd_client) {
 void handle_server_response(int fd_server, int fd_client) {
     rio_t rio;
     char buf[MAXLINE];
-    int content_len = 0;
 
     Rio_readinitb(&rio, fd_server);
     if (!Rio_readlineb(&rio, buf, MAXLINE)) {
@@ -99,10 +98,6 @@ void handle_server_response(int fd_server, int fd_client) {
     printf("%s", buf);
     Rio_writen(fd_client, buf, strlen(buf));
     while (strcmp(buf, "\r\n")) {
-        if (!memcmp(buf, content_length_name, strlen(content_length_name))) {
-            char *endptr;
-            content_len = strtoll(buf + strlen(content_length_name), &endptr, 10);
-        }
         Rio_readlineb(&rio, buf, MAXLINE);
         printf("%s", buf);
         Rio_writen(fd_client, buf, strlen(buf));
@@ -110,8 +105,7 @@ void handle_server_response(int fd_server, int fd_client) {
 
     char content_buf[MAXBUF];
 
-    while (content_len) {
-        content_len -= Rio_readnb(&rio, content_buf, MAXBUF);
+    while (Rio_readnb(&rio, content_buf, MAXBUF)) {
         printf("%s", content_buf);
         Rio_writen(fd_client, content_buf, strlen(content_buf));
     }
