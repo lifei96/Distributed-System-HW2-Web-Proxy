@@ -108,10 +108,12 @@ void handle_server_response(int fd_server, int fd_client) {
         Rio_writen(fd_client, buf, strlen(buf));
     }
 
-    if (content_len) {
-        Rio_readnb(&rio, buf, content_len);
-        printf("%s", buf);
-        Rio_writen(fd_client, buf, strlen(buf));
+    char content_buf[MAXBUF];
+
+    while (content_len) {
+        content_len -= Rio_readnb(&rio, content_buf, MAXBUF);
+        printf("%s", content_buf);
+        Rio_writen(fd_client, content_buf, strlen(content_buf));
     }
 
     Close(fd_server);
