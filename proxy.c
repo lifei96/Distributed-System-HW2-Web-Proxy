@@ -117,7 +117,48 @@ void handle_server_response(int fd_server, int fd_client) {
  * parse_uri - parses an uri to host, port and query
  */
 void parse_uri(char *uri, char *host, char *port, char *query) {
+    char *pos_host, *pos_port, *pos_query;
 
+    pos_host = strstr(uri, "://");
+    if (!pos_host) {
+        pos_host = uri;
+    } else {
+        pos_host += 3;
+    }
+
+    pos_port = index(pos_host, ':');
+    if (pos_port) {
+        pos_port++;
+    }
+
+    pos_query = index(pos_host, '/');
+
+    if (!pos_query) {
+        strcpy(query, "/");
+    } else {
+        strcpy(query, pos_query);
+    }
+
+    if (!pos_port) {
+        strcpy(port, "80");
+    } else if (!pos_query) {
+        strcpy(port, pos_port);
+    } else {
+        strncpy(port, pos_port, pos_query - pos_port);
+    }
+
+    if (pos_port) {
+        strncpy(host, pos_host, pos_port - pos_host - 1);
+    } else if (pos_query) {
+        strncpy(host, pos_host, pos_query - pos_host);
+    } else {
+        strcpy(host, pos_host);
+    }
+
+    printf("host: %s\n", host);
+    printf("port: %s\n", port);
+    printf("query: %s\n", query);
+    printf("parse_uri success\n");
 }
 
 /*
