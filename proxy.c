@@ -8,13 +8,17 @@
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 
 static const char *content_length_name = "Content-length: ";
+static const char *user_agent_name = "User-Agent: ";
+static const char *host_name = "Host: ";
+static const char *connection_name = "Connection: ";
+static const char *proxy_connection_name = "Proxy-Connection: ";
 
 void handle_client_request(int connfd);
 void handle_server_response(int fd_server, int fd_client);
 void parse_uri(char *uri, char *host, char *port, char *query);
-void construct_request(char *request, char *method, char *query,
-        char *version,char *host, char *user_agent, char *connection,
-        char *proxy_connection, rio_t *rio);
+void construct_request(char *request, const char *method, const char *query,
+        const char *version, const char *user_agent, const char *host,
+        const char *connection, const char *proxy_connection, rio_t *rio);
 void client_error(int fd, char *cause, char *errnum,
         char *shortmsg, char *longmsg);
 
@@ -31,7 +35,7 @@ int main(int argc, char **argv) {
 
     listenfd = Open_listenfd(argv[1]);
 
-    while (true) {
+    while (1) {
         clientlen = sizeof(clientaddr);
         fd_client = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         Getnameinfo((SA *) &clientaddr, clientlen, hostname,
@@ -68,7 +72,7 @@ void handle_client_request(int fd_client) {
     parse_uri(uri, host, port, query);
 
     construct_request(request, method, query, "HTTP/1.0",
-            host, user_agent_hdr, "close", "close", &rio);
+            user_agent_hdr, host, "close", "close", &rio);
 
     fd_server = Open_clientfd(host, port);
 
@@ -95,7 +99,7 @@ void handle_server_response(int fd_server, int fd_client) {
     printf("%s", buf);
     Rio_writen(fd_client, buf, strlen(buf));
     while (strcmp(buf, "\r\n")) {
-        if (!memcmp(buf, content_length_name, sizeof(content_length_name))) {
+        if (!memcmp(buf, content_length_name, strlen(content_length_name))) {
             char *endptr;
             content_len = strtoll(buf + strlen(content_length_name), &endptr, 10);
         }
@@ -164,10 +168,34 @@ void parse_uri(char *uri, char *host, char *port, char *query) {
 /*
  * construct_request - constructs an http request
  */
-void construct_request(char *request, char *method, char *query,
-        char *version,char *host, char *user_agent, char *connection,
-        char *proxy_connection, rio_t *rio) {
+void construct_request(char *request, const char *method, const char *query,
+        const char *version, const char *user_agent, const char *host,
+        const char *connection, const char *proxy_connection, rio_t *rio) {
+    sprintf(request, "%s %s %s\r\n", method, query, version);
+    sprintf(request, "%sUser-Agent: %s\r\n", request, user_agent);
+    sprintf(request, "%sHost: %s\r\n", request, host);
+    sprintf(request, "%sConnection: %s\r\n", request, connection);
+    sprintf(request, "%sProxy-Connection: %s\r\n", request, proxy_connection);
 
+    char buf[MAXLINE];
+
+    if (!Rio_readlineb(rio, buf, MAXLINE)) {
+        sprintf(request, "%s\r\n", request);
+        return;
+    }
+    while (strcmp(buf, "\r\n")) {
+        if (!memcmp(buf, user_agent_name, strlen(user_agent_name)) ||
+            !memcmp(buf, host_name, strlen(host_name)) ||
+            !memcmp(buf, connection_name, strlen(connection_name)) ||
+            !memcmp(buf, proxy_connection_name, strlen(proxy_connection_name))) {
+            Rio_readlineb(rio, buf, MAXLINE);
+            continue;
+        }
+        printf("%s", buf);
+        sprintf(request, "%s%s", request, buf);
+        Rio_readlineb(rio, buf, MAXLINE);
+    }
+    sprintf(request, "%s\r\n", request);
 }
 
 /*
