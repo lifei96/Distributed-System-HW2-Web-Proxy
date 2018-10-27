@@ -218,6 +218,8 @@ Node_t *put_cache(char *uri, char *response) {
     }
 
     V(&sem_w);
+
+    return tmp;
 }
 
 
