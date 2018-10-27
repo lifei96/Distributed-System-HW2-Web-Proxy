@@ -72,7 +72,7 @@ void init_cache() {
 
 /* inserts node cur after node pos */
 void insert_node(Node_t *cur, Node_t *pos) {
-    if (pos->next == NULL) {
+    if (cur == NULL || pos == NULL || pos->next == NULL) {
         /* node cur should not be inserted after tail (dummy node) */
         printf("Error: node cur should not be inserted after tail (dummy node).");
         return;
@@ -85,7 +85,7 @@ void insert_node(Node_t *cur, Node_t *pos) {
 
 /* removes node cur, returns the node before it */
 Node_t *remove_node(Node_t *cur) {
-    if (cur->prev == NULL || cur->next == NULL) {
+    if (cur == NULL || cur->prev == NULL || cur->next == NULL) {
         /* dummy node cannot be removed */
         printf("Error: dummy node cannot be removed.");
         return NULL;
@@ -99,7 +99,7 @@ Node_t *remove_node(Node_t *cur) {
 
 /* moves node cur to the position after node pos */
 void move_node(Node_t *cur, Node_t *pos) {
-    if (cur->prev == NULL || cur->next == NULL) {
+    if (cur == NULL || pos == NULL || cur->prev == NULL || cur->next == NULL) {
         /* dummy node cannot be moved */
         printf("Error: dummy node cannot be moved.");
         return;
@@ -117,7 +117,7 @@ void move_node(Node_t *cur, Node_t *pos) {
 /* finds a node with the given uri from head */
 Node_t *find_node(char *uri, Node_t *head) {
     Node_t *cur = head->next;
-    while (cur->next) {
+    while (cur->next != NULL) {
         if (cmp(cur, uri)) {
             return cur;
         }
@@ -214,7 +214,7 @@ Node_t *put_cache(char *uri, char *response) {
         LRU_size += tmp->size;
         while (LRU_len > MAX_LRU_LEN || LRU_size + LFU_size > MAX_CACHE_SIZE) {
             LRU_size -= LRU_tail->prev->size;
-            remove_node(LFU_tail->prev);
+            remove_node(LRU_tail->prev);
             LRU_len--;
         }
     }
