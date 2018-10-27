@@ -26,9 +26,11 @@ sem_t sem_w;  /* semaphore for cache write */
 /* creates a node with given uri and response */
 Node_t *create_node(char *uri, char *response) {
     Node_t *node = (Node_t *)Malloc(sizeof(Node_t));
-    strcpy(node->uri, uri);
-    strcpy(node->response, response);
-    if (response) {
+    if (uri != NULL) {
+        strcpy(node->uri, uri);
+    }
+    if (response != NULL) {
+        strcpy(node->response, response);
         node->size = strlen(node->response);
     } else {
         node->size = 0;
