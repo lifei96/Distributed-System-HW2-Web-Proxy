@@ -92,6 +92,8 @@ void *handle_client_request(void *arg) {
 
         fd_server = Open_clientfd(host, port);
 
+        printf("Sending request to server:\n%s\n", %request);
+
         Rio_writen(fd_server, request, strlen(request));
 
         response_size = handle_server_response(fd_server, fd_client, response);
@@ -113,6 +115,7 @@ void *handle_client_request(void *arg) {
  * handle_server_response - handles http response from server, returns response size
  */
 int handle_server_response(int fd_server, int fd_client, char *response) {
+    printf("\n\nhandling server response\n\n");
     rio_t rio;
     char buf[MAXBUF];
     int cur_size = 0, total_size = 0;
