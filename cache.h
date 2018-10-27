@@ -66,8 +66,8 @@ Node_t *find(char *url, Node_t *head);
 /* updates cache after accessing a url */
 void access(char *url);
 
-/* gets the cached response with the given url, returns NULL if it not exists */
-char *get(char *url);
+/* gets the cached response with the given url if it exists */
+void get(char *url, char *response);
 
 /* puts (url, response) into the cache */
 Node_t *put(char *url, char *response);

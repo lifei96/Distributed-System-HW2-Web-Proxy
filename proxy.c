@@ -3,6 +3,7 @@
  */
 /* $begin proxy.c */
 #include "csapp.h"
+#include "cache.h"
 
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
@@ -32,6 +33,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    init_cache();
+
     listenfd = Open_listenfd(argv[1]);
 
     while (1) {
@@ -53,7 +56,7 @@ void *handle_client_request(void *arg) {
     int fd_client = *((int *)arg);
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE];
     char host[MAXLINE], port[MAXLINE], query[MAXLINE];
-    char request[MAXBUF];
+    char request[MAXBUF], response[MAX_OBJECT_SIZE];
     rio_t rio;
     int fd_server;
 
@@ -69,7 +72,7 @@ void *handle_client_request(void *arg) {
                      "Web Proxy does not implement this method");
         return NULL;
     }
-
+    
     parse_uri(uri, host, port, query);
 
     construct_request(request, method, query, "HTTP/1.0",
