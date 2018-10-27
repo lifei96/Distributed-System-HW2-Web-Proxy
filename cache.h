@@ -63,5 +63,11 @@ Node_t *remove(Node_t *cur);
 /* moves node cur to the position after node pos */
 void move(Node_t *cur, Node_t *pos);
 
+/* gets the cached response with the given url, returns NULL if it not exists */
+char *get(char *url);
+
+/* puts (url, response) into the cache */
+Node_t *put(char *url, char *response);
+
 #endif /* __CACHE_H__ */
 /* $end cache.h */

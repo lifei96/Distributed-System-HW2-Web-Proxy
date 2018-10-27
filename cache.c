@@ -47,7 +47,8 @@ void free_node(Node_t *cur) {
 /* checks whether the url in a given node is the same as a given url */
 int isSame(Node_t *node, char *url) {
     if (node->url == NULL || url == NULL) {
-        /* dummy node */
+        /* dummy node is not comparable */
+        printf("Error: dummy node is not comparable.")
         return 0;
     }
     return (strcasecmp(node->url, url) == 0) ? 1 : 0;
@@ -77,7 +78,8 @@ void init_cache() {
 /* inserts node cur after node pos */
 void insert(Node_t *cur, Node_t *pos) {
     if (pos->next == NULL) {
-        /* cur should not be inserted after tail (dummy node) */
+        /* node cur should not be inserted after tail (dummy node) */
+        printf("Error: node cur should not be inserted after tail (dummy node).");
         return;
     }
     cur->prev = pos;
@@ -90,7 +92,8 @@ void insert(Node_t *cur, Node_t *pos) {
 Node_t *remove(Node_t *cur) {
     if (cur->prev == NULL || cur->next == NULL) {
         /* dummy node cannot be removed */
-        return;
+        printf("Error: dummy node cannot be removed.");
+        return NULL;
     }
     Node *tmp = cur->prev;
     tmp->next = cur->next;
@@ -103,15 +106,28 @@ Node_t *remove(Node_t *cur) {
 void move(Node_t *cur, Node_t *pos) {
     if (cur->prev == NULL || cur->next == NULL) {
         /* dummy node cannot be moved */
+        printf("Error: dummy node cannot be moved.");
         return;
     }
     if (pos->next == NULL) {
-        /* cur should not be moved after tail (dummy node) */
+        /* node cur should not be moved after tail (dummy node) */
+        printf("node cur should not be moved after tail (dummy node).");
         return;
     }
     cur->prev->next = cur->next;
     cur->next->prev = cur->prev;
     insert(cur, pos);
 }
+
+/* gets the cached response with the given url, returns NULL if it not exists */
+char *get(char *url) {
+
+}
+
+/* puts (url, response) into the cache */
+Node_t *put(char *url, char *response) {
+
+}
+
 
 /* $end cache.c */
