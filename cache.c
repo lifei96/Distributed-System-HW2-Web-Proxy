@@ -28,9 +28,10 @@ Node_t *create_node(char *url, char *response) {
     Node_t *node = (Node_t *)Malloc(sizeof(Node_t));
     node->url = url;
     node->response = response;
-    node->size = 0;
     if (response) {
         node->size = strlen(node->response);
+    } else {
+        node->size = 0;
     }
     node->count = 1;
     return node;
