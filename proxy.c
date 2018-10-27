@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
         fd_client = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         Getnameinfo((SA *) &clientaddr, clientlen, hostname,
                 MAXLINE, port, MAXLINE, 0);
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
+        fprintf(stdout, "Accepted connection from (%s, %s)\n", hostname, port);
         pthread_t tid;
         Pthread_create(&tid, NULL, handle_client_request, (void *)&fd_client);
         Pthread_detach(tid);
@@ -65,7 +65,7 @@ void *handle_client_request(void *arg) {
     if (!Rio_readlineb(&rio, buf, MAXLINE)) {
         return NULL;
     }
-    printf("Received HTTP request %s", buf);
+    fprintf(stdout, "Received HTTP request %s", buf);
     sscanf(buf, "%s %s", method, uri);
     if (strcasecmp(method, "GET")) {
         /* Not a GET request */
@@ -104,7 +104,7 @@ void *handle_client_request(void *arg) {
         }
     }
 
-    printf("Success");
+    fprintf(stdout, "Success");
 
     return NULL;
 }
@@ -120,7 +120,7 @@ int handle_server_response(int fd_server, int fd_client, char *response) {
     Rio_readinitb(&rio, fd_server);
 
     while ((cur_size = Rio_readnb(&rio, buf, MAXBUF))) {
-        printf("%s", buf);
+        fprintf(stdout, "%s", buf);
         Rio_writen(fd_client, buf, cur_size);
         if (total_size + cur_size < MAX_OBJECT_SIZE) {
             strncpy(response + total_size, buf, cur_size);
@@ -175,10 +175,10 @@ void parse_uri(char *uri, char *host, char *port, char *query) {
         strcpy(host, pos_host);
     }
 
-    printf("host: %s\n", host);
-    printf("port: %s\n", port);
-    printf("query: %s\n", query);
-    printf("parse_uri success\n");
+    fprintf(stdout, "host: %s\n", host);
+    fprintf(stdout, "port: %s\n", port);
+    fprintf(stdout, "query: %s\n", query);
+    fprintf(stdout, "parse_uri success\n");
 }
 
 /*
@@ -207,7 +207,7 @@ void construct_request(char *request, const char *method, const char *query,
             Rio_readlineb(rio, buf, MAXLINE);
             continue;
         }
-        printf("%s", buf);
+        fprintf(stdout, "%s", buf);
         sprintf(request, "%s%s", request, buf);
         Rio_readlineb(rio, buf, MAXLINE);
     }
