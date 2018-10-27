@@ -145,7 +145,7 @@ void access_node(char *uri) {
             /* uri in LRU */
             tmp->count++;
             if (LFU_len < MAX_LFU_LEN || tmp->count > LFU_tail->prev->count) {
-                move_node(tmp, LFU_tail->prev->prev);
+                move_node(tmp, LFU_tail->prev);
                 LRU_size -= tmp->size;
                 LRU_len--;
                 LFU_size += tmp->size;
