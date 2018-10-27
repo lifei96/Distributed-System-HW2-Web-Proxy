@@ -92,7 +92,7 @@ void *handle_client_request(void *arg) {
 
         fd_server = Open_clientfd(host, port);
 
-        printf("Sending request to server:\n%s\n", %request);
+        printf("Sending request to server:\n%s\n", request);
 
         Rio_writen(fd_server, request, strlen(request));
 
