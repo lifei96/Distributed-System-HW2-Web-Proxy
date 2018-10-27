@@ -26,26 +26,19 @@ sem_t sem_w;  /* semaphore for cache write */
 /* creates a node with given url and response */
 Node_t *create_node(char *url, char *response) {
     Node_t *node = (Node_t *)Malloc(sizeof(Node_t));
-    node->url = url;
-    node->response = response;
+    memcpy(node->url, url);
+    memcpy(node->response, response);
     if (response) {
         node->size = strlen(node->response);
     } else {
         node->size = 0;
     }
-    node->count = 1;
+    node->count = 0;
     return node;
 }
 
-/* frees node cur */
-void free_node(Node_t *cur) {
-    Free(cur->url);
-    Free(cur->response);
-    Free(cur);
-}
-
 /* checks whether the url in a given node is the same as a given url */
-int isSame(Node_t *node, char *url) {
+int cmp(Node_t *node, char *url) {
     if (node->url == NULL || url == NULL) {
         /* dummy node is not comparable */
         printf("Error: dummy node is not comparable.")
@@ -98,7 +91,7 @@ Node_t *remove(Node_t *cur) {
     Node *tmp = cur->prev;
     tmp->next = cur->next;
     tmp->next->prev = tmp;
-    free_node(cur);
+    Free(cur);
     return tmp;
 }
 
@@ -119,14 +112,112 @@ void move(Node_t *cur, Node_t *pos) {
     insert(cur, pos);
 }
 
-/* gets the cached response with the given url, returns NULL if it not exists */
-char *get(char *url) {
+/* finds a node with the given url from head */
+Node_t *find(char *url, Node_t *head) {
+    Node *cur = head->next;
+    while (cur->next) {
+        if (cmp(cur, url)) {
+            return cur;
+        }
+        cur = cur->next;
+    }
+    return NULL;
+}
 
+/* updates cache after accessing a url */
+void access(char *url) {
+    P(&sem_w);
+
+    Node_t *tmp = find(url, LFU_head);
+
+    if (tmp) {
+        /* url in LFU */
+        tmp->count++;
+        while (tmp->prev != LFU_head && tmp->count > tmp->prev->count) {
+            move(tmp, tmp->prev->prev);
+        }
+    } else {
+        /* url not in LFU */
+        tmp = find(url, LRU_head);
+        if (tmp) {
+            /* url in LRU */
+            tmp->count++;
+            if (LFU_len < MAX_LFU_LEN || tmp->count > LFU_tail->prev->count) {
+                move(tmp, LFU_tail->prev->prev);
+                LRU_size -= tmp->size;
+                LRU_len--;
+                LFU_size += tmp->size;
+                LFU_len++;
+                while (tmp->prev != LFU_head && tmp->count > tmp->prev->count) {
+                    move(tmp, tmp->prev->prev);
+                }
+                while (LFU_len > MAX_LFU_LEN) {
+                    LFU_size -= LFU_tail->prev->size;
+                    remove(LFU_tail->prev);
+                    LFU_len--;
+                }
+            } else {
+                move(tmp, LRU_head);
+            }
+        }
+    }
+    V(&sem_w);
+}
+
+/* gets the cached response with the given url if it exists */
+void get(char *url, char *response) {
+    P(&sem_r);
+    read_count++;
+    if (read_count == 1) {
+        P(&sem_w);
+    }
+    V(&sem_r);
+
+    Node_t *tmp = find(url, LFU_head);
+    if (tmp == NULL) {
+        /* url not in LFU */
+        tmp = find(url, LRU_head);
+    }
+
+    if (tmp) {
+        strcpy(response, tmp->response);
+    }
+
+    P(&sem_r);
+    read_count--;
+    if (read_count == 0) {
+        V(&sem_w);
+    }
+    V(&sem_r);
 }
 
 /* puts (url, response) into the cache */
 Node_t *put(char *url, char *response) {
+    if (strlen(response) > MAX_OBJECT_SIZE) {
+        return NULL;
+    }
 
+    P(&sem_w);
+
+    Node_t *tmp = find(url, LFU_head);
+    if (tmp == NULL) {
+        /* url not in LFU */
+        tmp = find(url, LRU_head);
+    }
+
+    if (tmp == NULL) {
+        tmp = create_node(url, response);
+        insert(tmp, LRU_head);
+        LRU_len++;
+        LRU_size += tmp->size;
+        while (LRU_len > MAX_LRU_LEN || LRU_size + LFU_size > MAX_CACHE_SIZE) {
+            LRU_size -= LRU_tail->prev->size;
+            remove(LFU_tail->prev);
+            LRU_len--;
+        }
+    }
+
+    V(&sem_w);
 }
 
 

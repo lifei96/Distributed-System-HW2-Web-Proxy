@@ -17,8 +17,8 @@
 typedef struct Node {
     struct Node *prev;
     struct Node *next;
-    char *url;
-    char *response;
+    char url[MAXLINE];
+    char response[MAX_OBJECT_SIZE];
     size_t size;
     int count;
 } Node_t;
@@ -45,11 +45,8 @@ extern sem_t sem_w;  /* semaphore for cache write */
 /* creates a node with given url and response */
 Node_t *create_node(char *url, char *response);
 
-/* frees node cur */
-void free_node(Node_t *cur);
-
 /* checks whether the url in a given node is the same as a given url */
-int isSame(Node_t *node, char *url);
+int cmp(Node_t *node, char *url);
 
 /* initializes cache */
 void init_cache();
@@ -62,6 +59,12 @@ Node_t *remove(Node_t *cur);
 
 /* moves node cur to the position after node pos */
 void move(Node_t *cur, Node_t *pos);
+
+/* finds a node with the given url from head */
+Node_t *find(char *url, Node_t *head);
+
+/* updates cache after accessing a url */
+void access(char *url);
 
 /* gets the cached response with the given url, returns NULL if it not exists */
 char *get(char *url);
