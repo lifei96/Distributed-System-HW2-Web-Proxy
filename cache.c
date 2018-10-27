@@ -23,11 +23,11 @@ sem_t sem_w;  /* semaphore for cache write */
 
 /* functions */
 
-/* creates a node with given url and response */
-Node_t *create_node(char *url, char *response) {
+/* creates a node with given uri and response */
+Node_t *create_node(char *uri, char *response) {
     Node_t *node = (Node_t *)Malloc(sizeof(Node_t));
-    memcpy(node->url, url);
-    memcpy(node->response, response);
+    strcpy(node->uri, uri);
+    strcpy(node->response, response);
     if (response) {
         node->size = strlen(node->response);
     } else {
@@ -37,14 +37,14 @@ Node_t *create_node(char *url, char *response) {
     return node;
 }
 
-/* checks whether the url in a given node is the same as a given url */
-int cmp(Node_t *node, char *url) {
-    if (node->url == NULL || url == NULL) {
+/* checks whether the uri in a given node is the same as a given uri */
+int cmp(Node_t *node, char *uri) {
+    if (node->uri == NULL || uri == NULL) {
         /* dummy node is not comparable */
-        printf("Error: dummy node is not comparable.")
+        printf("Error: dummy node is not comparable.");
         return 0;
     }
-    return (strcasecmp(node->url, url) == 0) ? 1 : 0;
+    return (strcasecmp(node->uri, uri) == 0) ? 1 : 0;
 }
 
 /* initializes cache */
@@ -69,7 +69,7 @@ void init_cache() {
 }
 
 /* inserts node cur after node pos */
-void insert(Node_t *cur, Node_t *pos) {
+void insert_node(Node_t *cur, Node_t *pos) {
     if (pos->next == NULL) {
         /* node cur should not be inserted after tail (dummy node) */
         printf("Error: node cur should not be inserted after tail (dummy node).");
@@ -82,13 +82,13 @@ void insert(Node_t *cur, Node_t *pos) {
 }
 
 /* removes node cur, returns the node before it */
-Node_t *remove(Node_t *cur) {
+Node_t *remove_node(Node_t *cur) {
     if (cur->prev == NULL || cur->next == NULL) {
         /* dummy node cannot be removed */
         printf("Error: dummy node cannot be removed.");
         return NULL;
     }
-    Node *tmp = cur->prev;
+    Node_t *tmp = cur->prev;
     tmp->next = cur->next;
     tmp->next->prev = tmp;
     Free(cur);
@@ -96,7 +96,7 @@ Node_t *remove(Node_t *cur) {
 }
 
 /* moves node cur to the position after node pos */
-void move(Node_t *cur, Node_t *pos) {
+void move_node(Node_t *cur, Node_t *pos) {
     if (cur->prev == NULL || cur->next == NULL) {
         /* dummy node cannot be moved */
         printf("Error: dummy node cannot be moved.");
@@ -109,14 +109,14 @@ void move(Node_t *cur, Node_t *pos) {
     }
     cur->prev->next = cur->next;
     cur->next->prev = cur->prev;
-    insert(cur, pos);
+    insert_node(cur, pos);
 }
 
-/* finds a node with the given url from head */
-Node_t *find(char *url, Node_t *head) {
-    Node *cur = head->next;
+/* finds a node with the given uri from head */
+Node_t *find_node(char *uri, Node_t *head) {
+    Node_t *cur = head->next;
     while (cur->next) {
-        if (cmp(cur, url)) {
+        if (cmp(cur, uri)) {
             return cur;
         }
         cur = cur->next;
@@ -124,48 +124,48 @@ Node_t *find(char *url, Node_t *head) {
     return NULL;
 }
 
-/* updates cache after accessing a url */
-void access(char *url) {
+/* updates cache after accessing a uri */
+void access_node(char *uri) {
     P(&sem_w);
 
-    Node_t *tmp = find(url, LFU_head);
+    Node_t *tmp = find_node(uri, LFU_head);
 
     if (tmp) {
-        /* url in LFU */
+        /* uri in LFU */
         tmp->count++;
         while (tmp->prev != LFU_head && tmp->count > tmp->prev->count) {
-            move(tmp, tmp->prev->prev);
+            move_node(tmp, tmp->prev->prev);
         }
     } else {
-        /* url not in LFU */
-        tmp = find(url, LRU_head);
+        /* uri not in LFU */
+        tmp = find_node(uri, LRU_head);
         if (tmp) {
-            /* url in LRU */
+            /* uri in LRU */
             tmp->count++;
             if (LFU_len < MAX_LFU_LEN || tmp->count > LFU_tail->prev->count) {
-                move(tmp, LFU_tail->prev->prev);
+                move_node(tmp, LFU_tail->prev->prev);
                 LRU_size -= tmp->size;
                 LRU_len--;
                 LFU_size += tmp->size;
                 LFU_len++;
                 while (tmp->prev != LFU_head && tmp->count > tmp->prev->count) {
-                    move(tmp, tmp->prev->prev);
+                    move_node(tmp, tmp->prev->prev);
                 }
                 while (LFU_len > MAX_LFU_LEN) {
                     LFU_size -= LFU_tail->prev->size;
-                    remove(LFU_tail->prev);
+                    remove_node(LFU_tail->prev);
                     LFU_len--;
                 }
             } else {
-                move(tmp, LRU_head);
+                move_node(tmp, LRU_head);
             }
         }
     }
     V(&sem_w);
 }
 
-/* gets the cached response with the given url if it exists */
-void get(char *url, char *response) {
+/* gets the cached response with the given uri if it exists */
+void get_cache(char *uri, char *response) {
     P(&sem_r);
     read_count++;
     if (read_count == 1) {
@@ -173,10 +173,10 @@ void get(char *url, char *response) {
     }
     V(&sem_r);
 
-    Node_t *tmp = find(url, LFU_head);
+    Node_t *tmp = find_node(uri, LFU_head);
     if (tmp == NULL) {
-        /* url not in LFU */
-        tmp = find(url, LRU_head);
+        /* uri not in LFU */
+        tmp = find_node(uri, LRU_head);
     }
 
     if (tmp) {
@@ -191,28 +191,28 @@ void get(char *url, char *response) {
     V(&sem_r);
 }
 
-/* puts (url, response) into the cache */
-Node_t *put(char *url, char *response) {
+/* puts (uri, response) into the cache */
+Node_t *put_cache(char *uri, char *response) {
     if (strlen(response) > MAX_OBJECT_SIZE) {
         return NULL;
     }
 
     P(&sem_w);
 
-    Node_t *tmp = find(url, LFU_head);
+    Node_t *tmp = find_node(uri, LFU_head);
     if (tmp == NULL) {
-        /* url not in LFU */
-        tmp = find(url, LRU_head);
+        /* uri not in LFU */
+        tmp = find_node(uri, LRU_head);
     }
 
     if (tmp == NULL) {
-        tmp = create_node(url, response);
-        insert(tmp, LRU_head);
+        tmp = create_node(uri, response);
+        insert_node(tmp, LRU_head);
         LRU_len++;
         LRU_size += tmp->size;
         while (LRU_len > MAX_LRU_LEN || LRU_size + LFU_size > MAX_CACHE_SIZE) {
             LRU_size -= LRU_tail->prev->size;
-            remove(LFU_tail->prev);
+            remove_node(LFU_tail->prev);
             LRU_len--;
         }
     }

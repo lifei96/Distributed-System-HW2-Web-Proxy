@@ -17,7 +17,7 @@
 typedef struct Node {
     struct Node *prev;
     struct Node *next;
-    char url[MAXLINE];
+    char uri[MAXLINE];
     char response[MAX_OBJECT_SIZE];
     size_t size;
     int count;
@@ -42,35 +42,35 @@ extern sem_t sem_w;  /* semaphore for cache write */
 
 /* function prototypes */
 
-/* creates a node with given url and response */
-Node_t *create_node(char *url, char *response);
+/* creates a node with given uri and response */
+Node_t *create_node(char *uri, char *response);
 
-/* checks whether the url in a given node is the same as a given url */
-int cmp(Node_t *node, char *url);
+/* checks whether the uri in a given node is the same as a given uri */
+int cmp(Node_t *node, char *uri);
 
 /* initializes cache */
 void init_cache();
 
 /* inserts node cur after node pos */
-void insert(Node_t *cur, Node_t *pos);
+void insert_node(Node_t *cur, Node_t *pos);
 
 /* removes node cur, returns the node before it */
-Node_t *remove(Node_t *cur);
+Node_t *remove_node(Node_t *cur);
 
 /* moves node cur to the position after node pos */
-void move(Node_t *cur, Node_t *pos);
+void move_node(Node_t *cur, Node_t *pos);
 
-/* finds a node with the given url from head */
-Node_t *find(char *url, Node_t *head);
+/* finds a node with the given uri from head */
+Node_t *find_node(char *uri, Node_t *head);
 
-/* updates cache after accessing a url */
-void access(char *url);
+/* updates cache after accessing a uri */
+void access_node(char *uri);
 
-/* gets the cached response with the given url if it exists */
-void get(char *url, char *response);
+/* gets the cached response with the given uri if it exists */
+void get_cache(char *uri, char *response);
 
-/* puts (url, response) into the cache */
-Node_t *put(char *url, char *response);
+/* puts (uri, response) into the cache */
+Node_t *put_cache(char *uri, char *response);
 
 #endif /* __CACHE_H__ */
 /* $end cache.h */

@@ -14,7 +14,7 @@ static const char *connection_name = "Connection: ";
 static const char *proxy_connection_name = "Proxy-Connection: ";
 
 void *handle_client_request(void *arg);
-void handle_server_response(int fd_server, int fd_client);
+int handle_server_response(int fd_server, int fd_client, char *response);
 void parse_uri(char *uri, char *host, char *port, char *query);
 void construct_request(char *request, const char *method, const char *query,
         const char *version, const char *user_agent, const char *host,
@@ -74,7 +74,7 @@ void *handle_client_request(void *arg) {
         return NULL;
     }
 
-    get(uri, response);
+    get_cache(uri, response);
 
     if (strlen(response)) {
         /* uri in cache */
@@ -82,7 +82,7 @@ void *handle_client_request(void *arg) {
 
         Close(fd_client);
 
-        access(uri);
+        access_node(uri);
     } else {
         /* uri not in cache */
         parse_uri(uri, host, port, query);
@@ -99,8 +99,8 @@ void *handle_client_request(void *arg) {
         Close(fd_client);
 
         if (response_size < MAX_OBJECT_SIZE) {
-            put(url, response);
-            access(url);
+            put_cache(uri, response);
+            access_node(uri);
         }
     }
 
