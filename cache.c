@@ -23,6 +23,19 @@ sem_t sem_w;  /* semaphore for cache write */
 
 /* functions */
 
+/* creates a node with given url and response */
+Node_t *create_node(char *url, char *response) {
+    Node_t *node = (Node_t *)Malloc(sizeof(Node_t));
+    node->url = url;
+    node->response = response;
+    node->size = 0;
+    if (response) {
+        node->size = strlen(node->response);
+    }
+    node->count = 1;
+    return node;
+}
+
 /* initializes cache */
 void init_cache() {
     LFU_head = NULL;

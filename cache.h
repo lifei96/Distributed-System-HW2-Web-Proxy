@@ -42,6 +42,9 @@ extern sem_t sem_w;  /* semaphore for cache write */
 
 /* function prototypes */
 
+/* creates a node with given url and response */
+Node_t *create_node(char *url, char *response);
+
 /* initializes cache */
 void init_cache();
 
