@@ -45,11 +45,23 @@ extern sem_t sem_w;  /* semaphore for cache write */
 /* creates a node with given url and response */
 Node_t *create_node(char *url, char *response);
 
-/* initializes cache */
-void init_cache();
+/* frees node cur */
+void free_node(Node_t *cur);
 
 /* checks whether the url in a given node is the same as a given url */
 int isSame(Node_t *node, char *url);
+
+/* initializes cache */
+void init_cache();
+
+/* inserts node cur after node pos */
+void insert(Node_t *cur, Node_t *pos);
+
+/* removes node cur, returns the node before it */
+Node_t *remove(Node_t *cur);
+
+/* moves node cur to the position after node pos */
+void move(Node_t *cur, Node_t *pos);
 
 #endif /* __CACHE_H__ */
 /* $end cache.h */

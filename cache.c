@@ -37,15 +37,35 @@ Node_t *create_node(char *url, char *response) {
     return node;
 }
 
+/* frees node cur */
+void free_node(Node_t *cur) {
+    Free(cur->url);
+    Free(cur->response);
+    Free(cur);
+}
+
+/* checks whether the url in a given node is the same as a given url */
+int isSame(Node_t *node, char *url) {
+    if (node->url == NULL || url == NULL) {
+        /* dummy node */
+        return 0;
+    }
+    return (strcasecmp(node->url, url) == 0) ? 1 : 0;
+}
+
 /* initializes cache */
 void init_cache() {
-    LFU_head = NULL;
-    LFU_tail = NULL;
+    LFU_head = create_node(NULL, NULL);  /* dummy node */
+    LFU_tail = create_node(NULL, NULL);  /* dummy node */
+    LFU_head->next = LFU_tail;
+    LFU_tail->prev = LFU_head;
     LFU_len = 0;
     LRU_size = 0;
 
-    LRU_head = NULL;
-    LRU_tail = NULL;
+    LRU_head = create_node(NULL, NULL);  /* dummy node */
+    LRU_tail = create_node(NULL, NULL);  /* dummy node */
+    LRU_head->next = LRU_tail;
+    LRU_tail->prev = LRU_head;
     LRU_len = 0;
     LRU_size = 0;
 
@@ -54,9 +74,44 @@ void init_cache() {
     Sem_init(&sem_w, 0, 1);
 }
 
-/* checks whether the url in a given node is the same as a given url */
-int isSame(Node_t *node, char *url) {
-    return (strcasecmp(node->url, url) == 0) ? 1 : 0;
+/* inserts node cur after node pos */
+void insert(Node_t *cur, Node_t *pos) {
+    if (pos->next == NULL) {
+        /* cur should not be inserted after tail (dummy node) */
+        return;
+    }
+    cur->prev = pos;
+    cur->next = pos->next;
+    pos->next = cur;
+    cur->next->prev = cur;
+}
+
+/* removes node cur, returns the node before it */
+Node_t *remove(Node_t *cur) {
+    if (cur->prev == NULL || cur->next == NULL) {
+        /* dummy node cannot be removed */
+        return;
+    }
+    Node *tmp = cur->prev;
+    tmp->next = cur->next;
+    tmp->next->prev = tmp;
+    free_node(cur);
+    return tmp;
+}
+
+/* moves node cur to the position after node pos */
+void move(Node_t *cur, Node_t *pos) {
+    if (cur->prev == NULL || cur->next == NULL) {
+        /* dummy node cannot be moved */
+        return;
+    }
+    if (pos->next == NULL) {
+        /* cur should not be moved after tail (dummy node) */
+        return;
+    }
+    cur->prev->next = cur->next;
+    cur->next->prev = cur->prev;
+    insert(cur, pos);
 }
 
 /* $end cache.c */
