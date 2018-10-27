@@ -59,6 +59,7 @@ void *handle_client_request(void *arg) {
     char request[MAXBUF], response[MAX_OBJECT_SIZE];
     rio_t rio;
     int fd_server;
+    int response_size = 0;
 
     Rio_readinitb(&rio, fd_client);
     if (!Rio_readlineb(&rio, buf, MAXLINE)) {
@@ -72,42 +73,64 @@ void *handle_client_request(void *arg) {
                      "Web Proxy does not implement this method");
         return NULL;
     }
-    
-    parse_uri(uri, host, port, query);
 
-    construct_request(request, method, query, "HTTP/1.0",
-            user_agent_hdr, host, "close", "close", &rio);
+    get(uri, response);
 
-    fd_server = Open_clientfd(host, port);
+    if (strlen(response)) {
+        /* uri in cache */
+        Rio_writen(fd_client, response, strlen(response));
 
-    Rio_writen(fd_server, request, strlen(request));
+        Close(fd_client);
 
-    handle_server_response(fd_server, fd_client);
+        access(uri);
+    } else {
+        /* uri not in cache */
+        parse_uri(uri, host, port, query);
+
+        construct_request(request, method, query, "HTTP/1.0",
+                          user_agent_hdr, host, "close", "close", &rio);
+
+        fd_server = Open_clientfd(host, port);
+
+        Rio_writen(fd_server, request, strlen(request));
+
+        response_size = handle_server_response(fd_server, fd_client, response);
+
+        Close(fd_client);
+
+        if (response_size < MAX_OBJECT_SIZE) {
+            put(url, response);
+            access(url);
+        }
+    }
 
     printf("Success");
-
-    Close(fd_client);
 
     return NULL;
 }
 
 /*
- * handle_server_response - handles http response from server
- *
+ * handle_server_response - handles http response from server, returns response size
  */
-void handle_server_response(int fd_server, int fd_client) {
+int handle_server_response(int fd_server, int fd_client, char *response) {
     rio_t rio;
     char buf[MAXBUF];
-    int size = 0;
+    int cur_size = 0, total_size = 0;
 
     Rio_readinitb(&rio, fd_server);
 
-    while ((size = Rio_readnb(&rio, buf, MAXBUF))) {
+    while ((cur_size = Rio_readnb(&rio, buf, MAXBUF))) {
         printf("%s", buf);
-        Rio_writen(fd_client, buf, size);
+        Rio_writen(fd_client, buf, cur_size);
+        if (total_size + cur_size < MAX_OBJECT_SIZE) {
+            strncpy(response + total_size, buf, cur_size);
+        }
+        total_size += cur_size;
     }
 
     Close(fd_server);
+
+    return total_size;
 }
 
 /*
