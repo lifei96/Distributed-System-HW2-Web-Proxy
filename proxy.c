@@ -23,6 +23,7 @@ void client_error(int fd, char *cause, char *errnum,
         char *shortmsg, char *longmsg);
 
 int main(int argc, char **argv) {
+    Signal(SIGPIPE, SIG_IGN);
     int listenfd, fd_client;
     char hostname[MAXLINE], port[MAXLINE];
     socklen_t clientlen;
