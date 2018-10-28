@@ -192,7 +192,7 @@ void construct_request(char *request, const char *method, const char *query,
         const char *version, const char *user_agent, const char *host,
         const char *connection, const char *proxy_connection, rio_t *rio) {
     sprintf(request, "%s %s %s\r\n", method, query, version);
-    sprintf(request, "%sUser-Agent: %s\r\n", request, user_agent);
+    sprintf(request, "%sUser-Agent: %s", request, user_agent);
     sprintf(request, "%sHost: %s\r\n", request, host);
     sprintf(request, "%sConnection: %s\r\n", request, connection);
     sprintf(request, "%sProxy-Connection: %s\r\n", request, proxy_connection);
