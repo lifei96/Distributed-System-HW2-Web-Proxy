@@ -67,7 +67,7 @@ Node_t *find_node(char *uri, Node_t *head);
 void access_node(char *uri);
 
 /* gets the cached response with the given uri if it exists */
-void get_cache(char *uri, char *response);
+int get_cache(char *uri, char *response);
 
 /* puts (uri, response) into the cache */
 Node_t *put_cache(char *uri, char *response, int response_size);
