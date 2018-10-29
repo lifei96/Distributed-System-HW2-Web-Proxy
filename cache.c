@@ -51,15 +51,15 @@ int cmp(Node_t *node, char *uri) {
 
 /* initializes cache */
 void init_cache() {
-    LFU_head = create_node(NULL, NULL);  /* dummy node */
+    LFU_head = create_node(NULL, NULL, 0);  /* dummy node */
     LFU_tail = create_node(NULL, NULL);  /* dummy node */
     LFU_head->next = LFU_tail;
     LFU_tail->prev = LFU_head;
     LFU_len = 0;
     LRU_size = 0;
 
-    LRU_head = create_node(NULL, NULL);  /* dummy node */
-    LRU_tail = create_node(NULL, NULL);  /* dummy node */
+    LRU_head = create_node(NULL, NULL, 0);  /* dummy node */
+    LRU_tail = create_node(NULL, NULL, 0);  /* dummy node */
     LRU_head->next = LRU_tail;
     LRU_tail->prev = LRU_head;
     LRU_len = 0;
