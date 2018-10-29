@@ -75,11 +75,11 @@ void *handle_client_request(void *arg) {
         return NULL;
     }
 
-    get_cache(uri, response);
+    response_size = get_cache(uri, response);
 
-    if (strlen(response)) {
+    if (response_size) {
         /* uri in cache */
-        Rio_writen(fd_client, response, strlen(response));
+        Rio_writen(fd_client, response, response_size);
 
         Close(fd_client);
 

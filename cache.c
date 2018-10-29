@@ -167,7 +167,8 @@ void access_node(char *uri) {
 }
 
 /* gets the cached response with the given uri if it exists */
-void get_cache(char *uri, char *response) {
+int get_cache(char *uri, char *response) {
+    int response_size = 0;
     P(&sem_r);
     read_count++;
     if (read_count == 1) {
@@ -182,7 +183,8 @@ void get_cache(char *uri, char *response) {
     }
 
     if (tmp) {
-        strcpy(response, tmp->response);
+        memcpy(response, tmp->response, tmp->size);
+        response_size = tmp->size;
     }
 
     P(&sem_r);
@@ -191,11 +193,12 @@ void get_cache(char *uri, char *response) {
         V(&sem_w);
     }
     V(&sem_r);
+    return response_size;
 }
 
 /* puts (uri, response) into the cache */
 Node_t *put_cache(char *uri, char *response, int response_size) {
-    if (strlen(response) > MAX_OBJECT_SIZE) {
+    if (response_size > MAX_OBJECT_SIZE) {
         return NULL;
     }
 
