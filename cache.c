@@ -1,5 +1,5 @@
 /*
- * cache.c - LFU and LRU - LFU and LRU cache for web proxy, implementation.
+ * cache.c - LFU and LRU cache for web proxy, double linked list implementation.
  */
 /* $begin cache.c */
 #include "cache.h"
