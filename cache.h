@@ -43,7 +43,7 @@ extern sem_t sem_w;  /* semaphore for cache write */
 /* function prototypes */
 
 /* creates a node with given uri and response */
-Node_t *create_node(char *uri, char *response);
+Node_t *create_node(char *uri, char *response, int response_size);
 
 /* checks whether the uri in a given node is the same as a given uri */
 int cmp(Node_t *node, char *uri);
@@ -70,7 +70,7 @@ void access_node(char *uri);
 void get_cache(char *uri, char *response);
 
 /* puts (uri, response) into the cache */
-Node_t *put_cache(char *uri, char *response);
+Node_t *put_cache(char *uri, char *response, int response_size);
 
 #endif /* __CACHE_H__ */
 /* $end cache.h */

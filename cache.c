@@ -24,14 +24,14 @@ sem_t sem_w;  /* semaphore for cache write */
 /* functions */
 
 /* creates a node with given uri and response */
-Node_t *create_node(char *uri, char *response) {
+Node_t *create_node(char *uri, char *response, int response_size) {
     Node_t *node = (Node_t *)Malloc(sizeof(Node_t));
     if (uri != NULL) {
         strcpy(node->uri, uri);
     }
-    if (response != NULL) {
-        strcpy(node->response, response);
-        node->size = strlen(node->response);
+    if (response != NULL && response_size) {
+        memcpy(node->response, response, response_size);
+        node->size = response_size;
     } else {
         node->size = 0;
     }
@@ -194,7 +194,7 @@ void get_cache(char *uri, char *response) {
 }
 
 /* puts (uri, response) into the cache */
-Node_t *put_cache(char *uri, char *response) {
+Node_t *put_cache(char *uri, char *response, int response_size) {
     if (strlen(response) > MAX_OBJECT_SIZE) {
         return NULL;
     }
@@ -208,7 +208,7 @@ Node_t *put_cache(char *uri, char *response) {
     }
 
     if (tmp == NULL) {
-        tmp = create_node(uri, response);
+        tmp = create_node(uri, response, response_size);
         insert_node(tmp, LRU_head);
         LRU_len++;
         LRU_size += tmp->size;

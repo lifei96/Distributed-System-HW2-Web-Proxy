@@ -102,7 +102,7 @@ void *handle_client_request(void *arg) {
         Close(fd_client);
 
         if (response_size < MAX_OBJECT_SIZE) {
-            put_cache(uri, response);
+            put_cache(uri, response, response_size);
             access_node(uri);
         }
     }
@@ -127,7 +127,7 @@ int handle_server_response(int fd_server, int fd_client, char *response) {
         printf("%s", buf);
         Rio_writen(fd_client, buf, cur_size);
         if (total_size + cur_size < MAX_OBJECT_SIZE) {
-            strncpy(response + total_size, buf, cur_size);
+            memcpy(response + total_size, buf, cur_size);
         }
         total_size += cur_size;
     }
